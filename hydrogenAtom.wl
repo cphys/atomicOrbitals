@@ -87,6 +87,21 @@ energyDifferenceNR::usage
     inputs:
     n:    (int) Primary atomic number";
     
+singularitiesH::usage
+ "singularitiesH[\[Omega]]
+    singularities and oscillator strengths
+	found by finding the residues at each
+	value of the singularity
+    inputs:
+    function:    (f) dynamic polerizability
+    variable:    (var) variable \[Omega]";    
+	
+dynamicPolarizabilityH::usage
+ "dynamicPolarizabilityH[\[Omega]]
+    exact solution to non-relativistic 
+	dynamic polarizability for Hydrogen
+    inputs:
+    \[Omega]:    (float) energy";    
 
 
 Begin["`Private`"]
@@ -244,16 +259,76 @@ hydrogenOscillatorsNR[
   
   {energyDifferenceNR[n],
        2/3*Sum[Sum[Norm[
-Assuming[assums,
-NIntegrate[
-Conjugate[hydrogenWaveFunctionXYZ[1,0,0,x,y,z,bohrRadius -> ao]]*components[[ii]]*hydrogenWaveFunctionXYZ[n,1,im,x,y,z,
-bohrRadius -> ao],
-{x,-\[Infinity],\[Infinity]},
-{y,-\[Infinity],\[Infinity]},
-{z,-\[Infinity],\[Infinity]},
-WorkingPrecision->wp,
-PrecisionGoal->pg]//Quiet]^2],
-{ii,Length[components]}]*energyDifference[n,im],{im,-1,1}]}]
+       Assuming[assums,
+       NIntegrate[
+       Conjugate[hydrogenWaveFunctionXYZ[1,0,0,x,y,z,bohrRadius -> ao]]
+       *components[[ii]]
+       *hydrogenWaveFunctionXYZ[n,1,im,x,y,z,bohrRadius -> ao],
+       {x,-\[Infinity],\[Infinity]},
+       {y,-\[Infinity],\[Infinity]},
+       {z,-\[Infinity],\[Infinity]},
+       WorkingPrecision->wp,
+       PrecisionGoal->pg]//Quiet]^2],
+       {ii,Length[components]}]*energyDifference[n,im],{im,-1,1}]}]
+
+   
+singularitiesH[
+  	function_, variable_,
+      OptionsPattern[{
+      minEnergy -> 0,
+      maxEnergy -> 0.49945,
+      numberOfVals -> 20,
+      workingPrecision -> 32}]] :=
+      Module[{
+      sings, en,tst, res,
+      f = function,
+      vr = variable,
+      mn = OptionValue[minEnergy],
+      mx = OptionValue[maxEnergy],
+      nv = OptionValue[numberOfVals],
+      wp = OptionValue[workingPrecision]},
+      
+      sings = 
+      Evaluate[
+      List@@FullSimplify[FunctionSingularities[f, vr], vr > 0]];
+      
+      tst=Flatten@Evaluate[
+      Table[Flatten@Values@Solve[sings[[i]], vr] // Quiet,
+      {i,Length[sings]}]];
+     
+      en=DeleteCases[DeleteDuplicates@Sort@Flatten@tst,Undefined];                    
+      en = Table[
+      If[mn < en[[i]] <= mx, en[[i]], Nothing], {i, Length[en]}];
+      en = Take[Sort[en], nv];
+      res = ParallelTable[
+      Residue[Evaluate[f]*en[[j]]*2, {vr, -en[[j]]}],
+      {j, 1, Length[en]}, DistributedContexts -> {"hydrogenAtom`Private`"}];
+      Return[Table[{en[[i]], res[[i]]}, {i, Length[en]}]]]
+      
+dynamicPolarizabilityH[
+	\[Omega]Value_,
+    OptionsPattern[{
+        nValue -> 1,
+        ZValue -> 1,
+        workingPrecision -> 32}]] :=
+       Module[{
+       importData,
+       t, s, Q,
+       \[Omega] = \[Omega]Value,
+       n = OptionValue[nValue],
+       wp = OptionValue[workingPrecision],
+       Z = OptionValue[ZValue]},
+       
+       t = (1 + (2*n^2*\[Omega])/Z^2)^(1/2);
+       s = (1 - (2*n^2*\[Omega])/Z^2)^(1/2);
+       
+       Q[it_] :=
+       SetPrecision[
+       1/((1 + it)^12 Z^4)*2048 it^3 Gamma[2 - 1/it]*((1 + it)^2
+       *Hypergeometric2F1Regularized[5, 2 - 1/it, 4 - 1/it,(-1 + it)^2/(1 + it)^2]
+       + 5 it (-1 + 2 it)
+       *Hypergeometric2F1Regularized[6, 3 - 1/it,4 - 1/it, (-1 + it)^2/(1 + it)^2]), wp];
+   Return[1/Z^4*(Q[t] + Q[s])]]
      
 
 
