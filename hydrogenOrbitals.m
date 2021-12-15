@@ -12,21 +12,21 @@ currently running at highest setting (pp=50)
 requires ~40 gigs of Ram, changing to a pp to a
 lower number while keeping perf = "Quality" will
 allow for lower ram usage *)
-fastPlot = True;
+fastPlot = False;
 If[fastPlot,
   {perf = "Speed", (* performance of density plot *)
    pp = 15}, (* number of plot points used in density plot *)
   {perf = "Quality",
-   pp = 50}];
+   pp = 150}];
    
 (* Animation will run 0 \[Rule] 2pi animationIncrements
 controles the radians per frame for the output *)   
 animationIncrements = \[Pi]/8;
 
 (* True will save animated table *)
-saveTableAnimation = True;
+saveTableAnimation = False;
 (* True will save a single non animated table *)
-saveSingleTable = True;
+saveSingleTable = False;
 (* True will save single orbital *)
 saveSingleOrbital = True;
 
