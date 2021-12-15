@@ -1,6 +1,9 @@
 (* ::Package:: *)
 
 ClearAll["Global`*"]
+<<"hydrogenAtom`"
+ParallelNeeds["hydrogenAtom`"]
+
 
 (* Change fastPlot to True to produce low resolution plots
 Here there may be room for a medium setting
@@ -9,7 +12,7 @@ currently running at highest setting (pp=50)
 requires ~40 gigs of Ram, changing to a pp to a
 lower number while keeping perf = "Quality" will
 allow for lower ram usage *)
-fastPlot = False;
+fastPlot = True;
 If[fastPlot,
   {perf = "Speed", (* performance of density plot *)
    pp = 15}, (* number of plot points used in density plot *)
@@ -65,44 +68,6 @@ R[n_, l_, r_, ao_] :=
    LaguerreL[n - l - 1, 2 l + 1, (2*r)/(n*ao)]
    
    
-wfRS[n_, l_, m_, r_, \[Theta]_, \[Phi]_, ao_] := 
- wfRS[n, l, m, r, \[Theta], \[Phi], ao] =
-    (* A function combining the radial and
-    angular parts of the wavefunction
-    inputs:
-    n:    (int) Primary atomic number
-    l:    (int) Azimuthal quantum number
-    m:    (int) Magnetic quantum number
-    r:    (float) radial distance
-    \[Theta]:    (float) polar angle
-    \[Phi]:    (float) azimuthal angle
-    ao:   (float) Bohr Radius *)
-  R[n, l, r, ao]*SphericalHarmonicY[l, m, \[Theta], \[Phi]]
-  
-totalWaveFunction[n_, l_, m_, r_, \[Theta]_, \[Phi]_, ao_] := 
- totalWaveFunction[n, l, m, r, \[Theta], \[Phi], ao] =
-    (* Here we write the orbitals in {0,+,-} basis
-     where pz orbital is the same as the p0 orbital
-     and the p+ and p- orbitals are formed by taking
-     linear combinations of the m=+-1 states.
-    inputs:
-    n:    (int) Primary atomic number
-    l:    (int) Azimuthal quantum number
-    m:    (int) Magnetic quantum number
-    r:    (float) radial distance
-    \[Theta]:    (float) polar angle
-    \[Phi]:    (float) azimuthal angle
-    ao:   (float) Bohr Radius *)    
-  If[m == 0,
-   wfRS[n, l, m, r, \[Theta], \[Phi], ao],
-   If[m > 0,
-    I/Sqrt[2] * (wfRS[n, l, m, r, \[Theta], \[Phi], ao] + 
-       wfRS[n, l, -m, r, \[Theta], \[Phi], ao]),
-    1/Sqrt[2] * (wfRS[n, l, -m, r, \[Theta], \[Phi], ao] - 
-       wfRS[n, l, m, r, \[Theta], \[Phi], ao])]]
-       
-       
-
 plotWaveFunction[n_, l_, m_, rot_] := (
     (* Here we write the orbitals in {0,+,-} basis
      where pz orbital is the same as the p0 orbital
@@ -124,10 +89,10 @@ plotWaveFunction[n_, l_, m_, rot_] := (
   yScale = zScale;
   Legended[DensityPlot3D[
     Chop[Conjugate[
-       totalWaveFunction[n, l, m, Sqrt[x^2 + y^2 + z^2], 
-        ArcTan[z, Sqrt[x^2 + y^2]], ArcTan[x, y], borRad]]*
-      totalWaveFunction[n, l, m, Sqrt[x^2 + y^2 + z^2], 
-       ArcTan[z, Sqrt[x^2 + y^2]], ArcTan[x, y], borRad]],
+       hydrogenWaveFunction[n, l, m, Sqrt[x^2 + y^2 + z^2], 
+        ArcTan[z, Sqrt[x^2 + y^2]], ArcTan[x, y]]]*
+      hydrogenWaveFunction[n, l, m, Sqrt[x^2 + y^2 + z^2], 
+       ArcTan[z, Sqrt[x^2 + y^2]], ArcTan[x, y]]],
     {x, -xScale*borRad, xScale*borRad},
     {y, -yScale*borRad, yScale*borRad},
     {z, -zScale*borRad, zScale*borRad},
@@ -152,7 +117,6 @@ plotWaveFunction[n_, l_, m_, rot_] := (
        ToString[m],
       Black,
       25,
-      FontFamily -> "Latex",
       DigitBlock -> 3],
      FrameStyle -> Black,
      RoundingRadius -> 10,
