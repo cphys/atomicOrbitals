@@ -1,4 +1,5 @@
-# A Mathematica package for calculating properties of the Hydorgen atom
+# Atomic Orbitals [![DOI](https://zenodo.org/badge/241291101.svg)](https://zenodo.org/badge/latestdoi/241291101)
+A Mathematica package for calculating properties of the Hydorgen atom
 ## Included calculations
 * hydrogenAtom.wl -- a mathematica package containing all of the functions to be used in calculations
 * hydrogenOrbitals.m -- a short notebook demonstrating how hydrogenAtom.wl can be used to create plots and animations of hydrogen orbitals
